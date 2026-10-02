@@ -1,36 +1,55 @@
-from django.shortcuts import render
-from core.serializers import AgreementSerializer, EntrySerializer
-from rest_framework import generics
+from core.serializers import AgreementSerializer, EntrySerializer, MilestoneSerializer, AuditSerializer
+from rest_framework imports generics
 
-# Create your views here.
 def home(request):
-    return render(request, 'ums/home.html')
+    return render(request, "ums.html")
 
-class AgreementList(generics.ListCreateAPIView):
+
+class AgreementListView(generics.ListCreateAPIView):
     serializer_class = AgreementSerializer
 
     def get_queryset(self):
         user = self.request.user
+
         return Agreement.objects.filter(
-            Q(client=user) | Q(contractor=user)
+            Q(client=user)| Q(contractor=user)
         )
 
-
-class AgreementDetailView(generics.RetrieveAPIView):
-    queryset = Agreement.objects.all()
-    serializer_class = AgreementSerializer
-
-
-
-#POST	/api/agreements/{id}/fund/	Fund the agreement (simulated)
-class FundAgreementView(generics.CreateAPIView):
+#GET	View one agreement's detail
+class AgreementDetailsView (generics.RetrieveAPIView):
     serializer_class = AgreementSerializer
 
     def get_queryset(self)
     user = self.request.user
+    return Agreement.objects.filter(
+        Q(client=user) | Q(contractor=user)
+    )
 
-    if request.user != user.client:
-        return serializer.ValidationError("you dont have the right to perform these action")
+class FundAgreementView(generics.CREATEAPIView):
+    serializer_class = AgreementSerializer
 
-    else:
-        return     
+    def get_queryset(self)
+    user = self.request.user
+    return Agreement.objects.filter(
+        Q(client=user)| Q(contractor=user)
+    )
+
+    if request.user != agreement.client:
+        return Response("Only Client can perform these action")
+
+    def post(self, request, pk):
+        user = self.get_object()
+
+    with transaction.atomic():
+    agreement = agreement.objects.select_update().get(pk=agreement.pk)
+
+    if agreement.status != "pending":
+        return Response("Agreement is not Pending")
+
+        agreement.status = "Funded"
+        agreement.save = (update_fields=[status])
+
+        Entry.objects.Create(agreement=agreement, amount=agreement.amount,type=EntryType.Funding)
+        Audit.objects.Create(agreement=agreement, actor=request.user, action="Agreement Funded" )
+
+    return Response(AgreementSerializer(agreement).data status=200)    
