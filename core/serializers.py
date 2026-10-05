@@ -70,7 +70,7 @@ class EntrySerializeer(serializers.modelsSerializers):
             "id",
             "type",
             "amount",
-            "aggreement"
+            "agreement"
             
         ]
         read_only_fields = fields
