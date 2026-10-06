@@ -1,6 +1,21 @@
 from rest_framework import serializers
 from core.models import Agreement, Milestone, Entry, Audit
+from rest_framework.serializers import SerializerMethodField
 
+class MilestoneSerializer(serializers.ModelSerializer):
+    is_overdue = SerializerMethodField()
+    class Meta:
+        model = Milestone
+        fields=(
+            "id",
+            "agreement",
+            "title",
+            "amount",
+            "status",
+            "due_date",
+            "is_overdue",
+        )
+        read_only = ["id", "agreement", "status"]
 
 class AgreementSerializer(serializers.ModelSerializer):
     milestone = MilestoneSerializer(many=True)
@@ -47,23 +62,9 @@ class AgreementSerializer(serializers.ModelSerializer):
         return agreement    
 
 
-class MilestoneSerializer(serializers.ModelSerializer):
-    is_overdue = SerializerMethodField()
-    class Meta:
-        model = Milestone
-        fields=(
-            "id",
-            "agreement",
-            "title",
-            "amount",
-            "status",
-            "due_date",
-            "is_overdue",
-        )
-        read_only = ["id", "agreement", "status"]
 
 
-class EntrySerializeer(serializers.modelsSerializers):
+class EntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Entry
         fields = [
@@ -75,8 +76,8 @@ class EntrySerializeer(serializers.modelsSerializers):
         ]
         read_only_fields = fields
 
-class AuditSerializer(serializers.modelsSerialiser):
-    action = serializer.StringRelatedField()
+class AuditSerializer(serializers.ModelSerializer):
+    action = serializers.StringRelatedField()
     class Meta:
         model = Audit
         fields = [
