@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from core.models import Agreement, Milestone, Entry, Audit
 from rest_framework.serializers import SerializerMethodField
+from django.utils import timezone
+
 
 class MilestoneSerializer(serializers.ModelSerializer):
     is_overdue = SerializerMethodField()
@@ -15,10 +17,17 @@ class MilestoneSerializer(serializers.ModelSerializer):
             "due_date",
             "is_overdue",
         )
-        read_only = ["id", "agreement", "status"]
+        read_only_fields = ["id", "agreement", "status"]
+
+    def get_is_overdue(self, obj):
+        return (
+            obj.due_date is not None
+            and obj.due_date < timezone.now()
+            and obj.status != "released"
+            )
 
 class AgreementSerializer(serializers.ModelSerializer):
-    milestone = MilestoneSerializer(many=True)
+    milestones = MilestoneSerializer(many=True)
     class Meta:
         model = Agreement
         fields= (
@@ -34,9 +43,9 @@ class AgreementSerializer(serializers.ModelSerializer):
         read_only_fields =["id", "client", "status","created_at"]
 
     def validate_amount(self, value):
-        if amount <= 0:
-            raise seriailizer.ValidationError("amount can not be less than or equal=0")
-        return amount
+        if value <= 0:
+            raise serializers.ValidationError("amount can not be less than or equal to 0")
+        return value
 
     def validate(self, attrs):
         if self.instance is None:  # only on create
@@ -87,4 +96,4 @@ class AuditSerializer(serializers.ModelSerializer):
             "action"
             "timestamp",
         ]
-        read_only = fields
+        read_only_fields = fields
