@@ -2,7 +2,7 @@ from rest_framework import serializers
 from core.models import Agreement, Milestone, Entry, Audit
 from rest_framework.serializers import SerializerMethodField
 from django.utils import timezone
-
+from django.db import transaction
 
 class MilestoneSerializer(serializers.ModelSerializer):
     is_overdue = SerializerMethodField()
@@ -23,7 +23,7 @@ class MilestoneSerializer(serializers.ModelSerializer):
         return (
             obj.due_date is not None
             and obj.due_date < timezone.now()
-            and obj.status != "released"
+            and obj.status != Milestone.Status.RELEASED
             )
 
 class AgreementSerializer(serializers.ModelSerializer):
@@ -48,7 +48,7 @@ class AgreementSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, attrs):
-        if self.instance is None:  # only on create
+        if self.instance is None:
             request = self.context["request"]
             if attrs["contractor"] == request.user:
                 raise serializers.ValidationError("You cannot create an agreement with yourself.")
@@ -93,7 +93,7 @@ class AuditSerializer(serializers.ModelSerializer):
             "id",
             "agreement",
             "actor",
-            "action"
+            "action",
             "timestamp",
         ]
         read_only_fields = fields
